@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Приказ Мудзана: 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;700&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --crimson: #8a0303;
+            --blood: #ff0000;
+            --dark: #050505;
+            --gold: #c5a059;
+            --text-glow: 0 0 10px rgba(197, 160, 89, 0.3);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--dark);
+            overflow: hidden;
+            font-family: 'Cormorant Garamond', serif;
+            color: #fff;
+        }
+
+        /* Фон с градиентом */
+        .bg-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1a0000 0%, #000000 100%);
+            z-index: 1;
+        }
+
+        /* Канвас для частиц (лепестки) */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Контейнер открытки */
+        .card-container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            perspective: 1000px;
+        }
+
+        .card {
+            background: rgba(20, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(138, 3, 3, 0.5);
+            padding: 40px;
+            border-radius: 4px; /* Японская строгость */
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(138, 3, 3, 0.2), inset 0 0 20px rgba(0,0,0,0.8);
+            transform-style: preserve-3d;
+            transition: transform 0.1s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Декоративные углы */
+        .corner {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 2px solid var(--gold);
+            transition: all 0.5s ease;
+        }
+        .tl { top: 10px; left: 10px; border-right: none; border-bottom: none; }
+        .tr { top: 10px; right: 10px; border-left: none; border-bottom: none; }
+        .bl { bottom: 10px; left: 10px; border-right: none; border-top: none; }
+        .br { bottom: 10px; right: 10px; border-left: none; border-top: none; }
+
+        /* Аватар Мудзана (CSS симуляция или место под картинку) */
+        .muzan-eye {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff0000 20%, #8a0303 60%, #000 100%);
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 15px var(--crimson);
+            position: relative;
+            animation: pulseEye 4s infinite;
+        }
+        
+        .muzan-eye::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 4px;
+            height: 40px;
+            background: black; /* Зрачок кошки/демона */
+            border-radius: 50%;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 3rem;
+            margin: 0;
+            color: var(--gold);
+            text-shadow: var(--text-glow);
+            letter-spacing: 5px;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            color: #aaa;
+            margin-top: 5px;
+            margin-bottom: 25px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid var(--crimson);
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        .message {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #e0e0e0;
+            font-style: italic;
+        }
+
+        .highlight {
+            color: var(--crimson);
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 0, 0, 0.4);
+        }
+
+        /* Кнопка */
+        .btn-blood {
+            background: transparent;
+            color: var(--crimson);
+            border: 1px solid var(--crimson);
+            padding: 15px 40px;
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn-blood:hover {
+            background: var(--crimson);
+            color: #000;
+            box-shadow: 0 0 20px var(--crimson);
+        }
+
+        .btn-blood::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn-blood:hover::before {
+            left: 100%;
+        }
+
+        /* Эффект скримера/вспышки */
+        .flash-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: red;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+            mix-blend-mode: overlay;
+        }
+
+        /* Анимации */
+        @keyframes pulseEye {
+            0% { box-shadow: 0 0 15px var(--crimson); }
+            50% { box-shadow: 0 0 30px var(--blood); transform: scale(1.05); }
+            100% { box-shadow: 0 0 15px var(--crimson); }
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .shake-anim {
+            animation: shake 0.5s;
+            animation-iteration-count: 1;
+        }
+
+        .hidden-text {
+            display: none;
+            color: var(--blood);
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-top: 20px;
+            animation: textFadeIn 2s forwards;
+        }
+
+        @keyframes textFadeIn {
+            from { opacity: 0; letter-spacing: 10px; filter: blur(5px); }
+            to { opacity: 1; letter-spacing: 2px; filter: blur(0); }
+        }
+        
+        /* Подпись */
+        .signature {
+            font-size: 0.8rem;
+            color: #555;
+            margin-top: 40px;
+            font-family: sans-serif;
+            opacity: 0.5;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="bg-layer"></div>
+    <canvas id="petalsCanvas"></canvas>
+    <div class="flash-overlay" id="flash"></div>
+
+    <div class="card-container">
+        <div class="card" id="mainCard">
+            <!-- Декоративные углы -->
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+
+            <!-- Иконка глаза демона (символ Мудзана) -->
+            <div class="muzan-eye"></div>
+
+            <h1>2026</h1>
+            <h2>KRD Flood</h2>
+
+            <div class="message" id="msgText">
+                Ничтожным существам свойственно искать повод для радости в смене цифр.<br><br>
+                Но раз уж вы всё ещё полезны мне... Я, <span class="highlight">Кибуцуджи Мудзан</span>, дозволяю вам прожить этот год.
+                <br><br>
+                Не разочаруйте меня.
+            </div>
+
+            <button class="btn-blood" onclick="acceptGift()">Принять дар</button>
+            
+            <div class="hidden-text" id="finalText">
+                Теперь вы принадлежите мне.<br>С Новым Годом.
+            </div>
+
+            <div class="signature">Owner Muzan</div>
+        </div>
+    </div>
+
+    <script>
+        // --- Логика частиц (Падающие лепестки Хиганбаны) ---
+        const canvas = document.getElementById('petalsCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * -height;
+                this.vy = 1 + Math.random() * 2; // Скорость падения
+                this.vx = (Math.random() - 0.5) * 1; // Покачивание
+                this.size = 2 + Math.random() * 5;
+                this.opacity = 0.5 + Math.random() * 0.5;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = (Math.random() - 0.5) * 2;
+                // Форма лепестка вытянутая
+            }
+
+            update() {
+                this.y += this.vy;
+                this.x += Math.sin(this.y * 0.01) + this.vx;
+                this.rotation += this.rotationSpeed;
+
+                if (this.y > height) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = '#8a0303'; // Темно-красный
+                
+                // Рисуем форму лепестка
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.size, this.size * 0.4, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+
+        // Создаем частицы
+        for (let i = 0; i < 60; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // --- Логика кнопки и интерактивности ---
+        function acceptGift() {
+            const card = document.getElementById('mainCard');
+            const flash = document.getElementById('flash');
+            const btn = document.querySelector('.btn-blood');
+            const finalText = document.getElementById('finalText');
+            const msgText = document.getElementById('msgText');
+
+            // 1. Звук (визуально через тряску и вспышку)
+            card.classList.add('shake-anim');
+            
+            // 2. Вспышка красного
+            flash.style.opacity = '0.6';
+            flash.style.transition = 'opacity 0.1s';
+            
+            setTimeout(() => {
+                flash.style.opacity = '0';
+                flash.style.transition = 'opacity 1s ease-out';
+            }, 100);
+
+            // 3. Убираем анимацию тряски
+            setTimeout(() => {
+                card.classList.remove('shake-anim');
+            }, 500);
+
+            // 4. Смена контента
+            btn.style.display = 'none';
+            msgText.style.display = 'none';
+            finalText.style.display = 'block';
+
+            // 5. Меняем стиль глаза
+            const eye = document.querySelector('.muzan-eye');
+            eye.style.boxShadow = "0 0 50px red";
+            eye.style.background = "red";
+        }
+
+        // --- 3D Эффект при наведении мышкой (Parallax) ---
+        const container = document.querySelector('.card-container');
+        const cardElement = document.querySelector('.card');
+
+        container.addEventListener('mousemove', (e) => {
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+            cardElement.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+        });
+
+        container.addEventListener('mouseleave', () => {
+            cardElement.style.transform = `rotateY(0deg) rotateX(0deg)`;
+        });
+
+    </script>
+</body>
+</html>
